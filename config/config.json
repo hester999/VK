@@ -1,3 +1,17 @@
 {
-  "port": "50001"
+  "server": {
+    "addr": "0.0.0.0",
+    "port": "50051"
+  },
+  "client": {
+    "default_server": "server:50051",
+    "default_topic": "test-topic",
+    "topics": [
+      "news",
+      "weather",
+      "sports",
+      "tech",
+      "music"
+    ]
+  }
 }

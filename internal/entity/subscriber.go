@@ -1,7 +1,10 @@
 package entity
 
+
 type MessageHandler func(msg interface{})
+
+
 type Subscriber struct {
-	Ch chan interface{}
-	Cb MessageHandler
+	Ch chan interface{} 
+	Cb MessageHandler   
 }

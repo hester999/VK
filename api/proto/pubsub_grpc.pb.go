@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v6.31.0--rc2
-// source: pubsub.proto
+// source: api/proto/pubsub.proto
 
 package pubsub
 
@@ -27,8 +27,12 @@ const (
 // PubSubClient is the client API for PubSub service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// PubSub service definition
 type PubSubClient interface {
+	// Подписка (сервер отправляет поток событий)
 	Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Event], error)
+	// Публикация (классический запрос-ответ)
 	Publish(ctx context.Context, in *PublishRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -72,8 +76,12 @@ func (c *pubSubClient) Publish(ctx context.Context, in *PublishRequest, opts ...
 // PubSubServer is the server API for PubSub service.
 // All implementations must embed UnimplementedPubSubServer
 // for forward compatibility.
+//
+// PubSub service definition
 type PubSubServer interface {
+	// Подписка (сервер отправляет поток событий)
 	Subscribe(*SubscribeRequest, grpc.ServerStreamingServer[Event]) error
+	// Публикация (классический запрос-ответ)
 	Publish(context.Context, *PublishRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedPubSubServer()
 }
@@ -160,5 +168,5 @@ var PubSub_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "pubsub.proto",
+	Metadata: "api/proto/pubsub.proto",
 }

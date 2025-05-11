@@ -4,65 +4,73 @@ import (
 	"encoding/json"
 	"flag"
 	"os"
+	"path/filepath"
 )
 
-const defaultPath = "../config/config.json"
-
+// Конфигурация для сервера и клиента
 type Config struct {
-	PathToConfigFile string
-	Addr             string `json:"addr"`
-	Port             string `json:"port"`
+	Server struct {
+		Addr string `json:"addr"`
+		Port string `json:"port"`
+	} `json:"server"`
+	Client struct {
+		DefaultServer string   `json:"default_server"`
+		DefaultTopic  string   `json:"default_topic"`
+		Topics        []string `json:"topics"`
+	} `json:"client"`
 }
 
-func fetchConfigPath() string {
-	var res string
+// Функция для получения пути к конфигурационному файлу
+func getConfigPath() string {
 
-	flag.StringVar(&res, "config", "", "config file path")
+	configPath := flag.String("config", "", "path to config file")
 	flag.Parse()
 
-	if res == "" {
-		res = defaultPath
+	if *configPath != "" {
+		return *configPath
 	}
-	return res
+
+	possiblePaths := []string{
+		"config/config.json",
+		"../../config/config.json",
+		"../../../config/config.json",
+		filepath.Join(os.Getenv("GOPATH"), "src/VK/config/config.json"),
+	}
+
+	for _, path := range possiblePaths {
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
+
+	return "config/config.json"
 }
 
-func LoadConfig() Config {
-	path := fetchConfigPath()
-
-	if path == "" {
-		panic("config path is empty")
-	}
-
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		panic("config file not found " + path)
-	}
-
-	cfg, err := readConfig(path)
-	if err != nil {
-		panic("read config file error " + err.Error())
-	}
-
-	if cfg.Addr == "" {
-		cfg.Addr = "0.0.0.0"
-	}
-
-	return cfg
-}
-
-func readConfig(path string) (Config, error) {
+// Функция для загрузки конфигурации
+func LoadConfig() (*Config, error) {
+	path := getConfigPath()
 
 	file, err := os.Open(path)
 	if err != nil {
-		return Config{}, err
+		return nil, err
 	}
 	defer file.Close()
 
-	decoder := json.NewDecoder(file)
 	cfg := &Config{}
-
-	err = decoder.Decode(cfg)
-	if err != nil {
-		return Config{}, err
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(cfg); err != nil {
+		return nil, err
 	}
-	return *cfg, nil
+	// Установка значений по умолчанию
+	if cfg.Server.Addr == "" {
+		cfg.Server.Addr = "0.0.0.0"
+	}
+	if cfg.Server.Port == "" {
+		cfg.Server.Port = "50051"
+	}
+	if cfg.Client.DefaultServer == "" {
+		cfg.Client.DefaultServer = "localhost:50051"
+	}
+
+	return cfg, nil
 }

@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    ports:
+      - "50051:50051"
+    # Вариант 1: Через переменную окружения
+    environment:
+      - CONFIG_PATH=/app/config/config.json
+    # Вариант 2: Монтирование конфига через volume
+    volumes:
+      - ./config:/app/config
+    # Вариант 3: Переопределение команды с флагом
+    # command: ["./server", "-config", "/app/config/config.json"]
+    # Вариант 4: Монтирование отдельного конфига
+    # volumes:
+    #   - ./custom-config.json:/app/config/config.json
+    networks:
+      - pubsub-network
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    depends_on:
+      - server
+    # Вариант 1: Через переменную окружения
+    environment:
+      - SERVER=server:50051
+      - CONFIG_PATH=/app/config/config.json
+    # Вариант 2: Монтирование конфига через volume
+    volumes:
+      - ./config:/app/config
+    # Вариант 3: Переопределение команды с флагом
+    # command: ["./client", "-config", "/app/config/config.json"]
+    # Вариант 4: Монтирование отдельного конфига
+    # volumes:
+    #   - ./custom-config.json:/app/config/config.json
+    networks:
+      - pubsub-network
+
+networks:
+  pubsub-network:
+    driver: bridge 
